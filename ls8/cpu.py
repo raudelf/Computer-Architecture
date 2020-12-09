@@ -2,6 +2,11 @@
 
 import sys
 
+LDI = 0b10000010
+PRN = 0b01000111
+HLT = 0b00000001
+MUL = 0b10100010
+
 
 class CPU:
     """Main CPU class."""
@@ -12,22 +17,23 @@ class CPU:
         self.ram = [0] * 256
         self.reg = [0] * 8
 
-    def load(self):
+    def load(self, filename):
         """Load a program into memory."""
 
         address = 0
+        program = []
 
-        # For now, we've just hardcoded a program:
+        with open(filename) as f:
+            for line in f:
+                line_split = line.split("#")
+                binary_num = line_split[0]
 
-        program = [
-            # From print8.ls8
-            0b10000010,  # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111,  # PRN R0
-            0b00000000,
-            0b00000001,  # HLT
-        ]
+                try:
+                    num = int(binary_num, 2)
+                    program.append(num)
+
+                except:
+                    continue
 
         for instruction in program:
             self.ram[address] = instruction
@@ -46,6 +52,8 @@ class CPU:
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
         # elif op == "SUB": etc
+        elif op == MUL:
+            return self.reg[reg_a] * self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -73,24 +81,25 @@ class CPU:
         """Run the CPU."""
         running = True
 
-        LDI = 0b10000010
-        PRN = 0b01000111
-        HLT = 0b00000001
-
         while running:
             cur_ram = self.ram_read(self.pc)
 
+            operand_a = self.ram_read(self.pc + 1)
+            operand_b = self.ram_read(self.pc + 2)
+
             if cur_ram is LDI:
-                operand_a = self.ram_read(self.pc + 1)
-                operand_b = self.ram_read(self.pc + 2)
 
                 self.reg[operand_a] = operand_b
 
                 self.pc += 3
 
             if cur_ram is PRN:
-                operand = self.ram_read(self.pc + 1)
-                print(self.reg[operand])
+                print(self.reg[operand_a])
+                self.pc += 2
+
+            if cur_ram is MUL:
+                self.reg[operand_a] = self.alu(cur_ram, operand_a, operand_b)
+                print(self.reg[operand_a])
                 self.pc += 2
 
             if cur_ram is HLT:
