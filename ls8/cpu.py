@@ -6,6 +6,8 @@ LDI = 0b10000010
 PRN = 0b01000111
 HLT = 0b00000001
 MUL = 0b10100010
+PUSH = 0b01000101
+POP = 0b01000110
 
 
 class CPU:
@@ -16,6 +18,7 @@ class CPU:
         self.pc = 0
         self.ram = [0] * 256
         self.reg = [0] * 8
+        self.reg[7] = 0xF4
 
     def load(self, filename):
         """Load a program into memory."""
@@ -92,6 +95,17 @@ class CPU:
                 self.reg[operand_a] = operand_b
 
                 self.pc += 3
+
+            if cur_ram is PUSH:
+                self.reg[7] -= 1
+                value = self.reg[operand_a]
+                self.ram[self.reg[7]] = value
+                self.pc += 2
+
+            if cur_ram is POP:
+                self.reg[operand_a] = self.ram[self.reg[7]]
+                self.reg[7] += 1
+                self.pc += 2
 
             if cur_ram is PRN:
                 print(self.reg[operand_a])
