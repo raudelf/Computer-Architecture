@@ -8,6 +8,10 @@ HLT = 0b00000001
 MUL = 0b10100010
 PUSH = 0b01000101
 POP = 0b01000110
+CMP = 0b10100111
+JMP = 0b01010100
+JEQ = 0b01010101
+JNE = 0b01010110
 
 
 class CPU:
@@ -19,6 +23,7 @@ class CPU:
         self.ram = [0] * 256
         self.reg = [0] * 8
         self.reg[7] = 0xF4
+        self.flag = 0
 
     def load(self, filename):
         """Load a program into memory."""
@@ -57,6 +62,13 @@ class CPU:
         # elif op == "SUB": etc
         elif op == MUL:
             return self.reg[reg_a] * self.reg[reg_b]
+        elif op == CMP:
+            if self.reg[reg_a] == self.reg[reg_b]:
+                self.flag = 0b00000001
+            elif self.reg[reg_a] < self.reg[reg_b]:
+                self.flag = 0b00000100
+            elif self.reg[reg_a] > self.reg[reg_b]:
+                self.flag = 0b00000010
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -115,6 +127,9 @@ class CPU:
                 self.reg[operand_a] = self.alu(cur_ram, operand_a, operand_b)
                 print(self.reg[operand_a])
                 self.pc += 2
+
+            if cur_ram is CMP:
+                self.reg[operand_a] = self.alu(cur_ram, operand_a, operand_b)
 
             if cur_ram is HLT:
                 running = False
