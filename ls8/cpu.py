@@ -129,7 +129,23 @@ class CPU:
                 self.pc += 2
 
             if cur_ram is CMP:
-                self.reg[operand_a] = self.alu(cur_ram, operand_a, operand_b)
+                self.alu(cur_ram, operand_a, operand_b)
+                self.pc += 3
+
+            if cur_ram is JMP:
+                self.pc = self.reg[operand_a]
+
+            if cur_ram is JEQ:
+                if self.flag == 0b00000001:
+                    self.pc = self.reg[operand_a]
+                else:
+                    self.pc += 2
+
+            if cur_ram is JNE:
+                if self.flag != 0b00000001:
+                    self.pc = self.reg[operand_a]
+                else:
+                    self.pc += 2
 
             if cur_ram is HLT:
                 running = False
